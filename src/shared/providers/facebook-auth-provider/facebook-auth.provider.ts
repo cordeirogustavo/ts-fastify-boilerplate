@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe'
-import { CastError } from '@/shared/errors/handlers'
+import { CastError } from '@/shared/errors'
 import type {
   IFacebookAuthProvider,
   TFacebookUser,

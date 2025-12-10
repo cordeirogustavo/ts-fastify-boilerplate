@@ -1,6 +1,6 @@
 import { inject, singleton } from 'tsyringe'
 import { type AppConfig, ConfigSymbols } from '@/config'
-import { CastError } from '@/shared/errors/handlers'
+import { CastError } from '@/shared/errors'
 import type {
   IGoogleAuthProvider,
   TGoogleUser,

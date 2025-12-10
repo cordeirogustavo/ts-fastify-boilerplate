@@ -1,34 +1,16 @@
-import { Express } from "express";
-import { inject, injectable } from "tsyringe";
-
-import { IRouter } from "@/shared/interfaces";
-
-import { UserSymbols } from "@/domain/user";
-import { OrganizationSymbols } from "@/domain/organization";
-import { UserPermissionSymbols } from "@/domain/user-permission";
-import { RoleSymbols } from "@/domain/role";
-import { ScopeSymbols } from "@/domain/scope";
+import type { FastifyInstance } from 'fastify'
+import { inject, injectable } from 'tsyringe'
+import { UserSymbols } from '@/domain/user'
+import type { IRouter } from '@/shared/interfaces'
 
 @injectable()
 export class AppRouter implements IRouter {
   constructor(
     @inject(UserSymbols.UserRouter)
     private userRouter: IRouter,
-    @inject(OrganizationSymbols.OrganizationRouter)
-    private organizationRouter: IRouter,
-    @inject(UserPermissionSymbols.UserPermissionRouter)
-    private userPermissionRouter: IRouter,
-    @inject(RoleSymbols.RoleRouter)
-    private roleRouter: IRouter,
-    @inject(ScopeSymbols.ScopeRouter)
-    private scopeRouter: IRouter
   ) {}
 
-  public register(server: Express) {
-    this.userRouter.register(server);
-    this.organizationRouter.register(server);
-    this.userPermissionRouter.register(server);
-    this.roleRouter.register(server);
-    this.scopeRouter.register(server);
+  public register(app: FastifyInstance): void {
+    this.userRouter.register(app)
   }
 }
