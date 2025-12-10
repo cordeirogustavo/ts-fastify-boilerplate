@@ -1,14 +1,17 @@
+import 'reflect-metadata'
+
+import { fastifyCors } from '@fastify/cors'
+import { fastifySwagger } from '@fastify/swagger'
+import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-  jsonSchemaTransform,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { fastifySwagger } from '@fastify/swagger'
-import { fastifyCors } from '@fastify/cors'
-import ScalarApiReference from '@scalar/fastify-api-reference'
 
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
@@ -34,7 +37,7 @@ app.register(ScalarApiReference, {
   routePrefix: '/docs',
 })
 
-app.listen({ port: 3333, host: '0.0.0.0' }, () => {
-  console.log('Server is running on port: 3333')
+app.listen({ port: port, host: '0.0.0.0' }, () => {
+  console.log(`Server is running on port: ${port}`)
   console.log('Docs available at: /docs')
 })
