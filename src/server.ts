@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import '@/shared/app/app.container'
 
 import { fastifyCors } from '@fastify/cors'
+import fastifyJwt from '@fastify/jwt'
 import { fastifySwagger } from '@fastify/swagger'
 import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
@@ -12,10 +13,13 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
 import { container } from 'tsyringe'
+import { type AppConfig, ConfigSymbols } from './config'
 import { AppRouter } from './shared/app/app.router'
 import { setupErrorHandler } from './shared/errors/handlers'
+import { authMiddleware, languageMiddleware } from './shared/middlewares'
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000
+const config = container.resolve<AppConfig>(ConfigSymbols.AppConfig)
+const port = config.appPort
 
 async function bootstrap() {
   const app = fastify({
@@ -35,6 +39,13 @@ async function bootstrap() {
 
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
+  app.addHook('onRequest', languageMiddleware)
+
+  app.register(fastifyJwt, {
+    secret: config.appSecret,
+  })
+
+  app.decorate('authenticate', authMiddleware)
 
   await app.register(fastifyCors, {
     origin: true,

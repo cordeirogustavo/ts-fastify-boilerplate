@@ -1,6 +1,6 @@
 import { inject, singleton } from 'tsyringe'
 import z from 'zod'
-import { ErrorSchema, NotFoundError } from '@/shared/errors'
+import { ErrorSchema } from '@/shared/errors'
 import type { IRouter } from '@/shared/interfaces'
 import type { FastifyTypedInstance } from '@/shared/types'
 import { UserDTO } from './user.schema'
@@ -20,6 +20,7 @@ export class UserRouter implements IRouter {
     app.get(
       `${PREFIX}/:userId`,
       {
+        // onRequest: app.authenticate,
         schema: {
           tags: ['user'],
           summary: 'getUserById',
@@ -33,11 +34,7 @@ export class UserRouter implements IRouter {
       },
       async (req, reply) => {
         const { userId } = req.params
-        const user = await this.userService.getUserById(userId)
-        if (!user) {
-          throw new NotFoundError('userNotFound')
-        }
-        reply.status(200).send(user)
+        reply.status(200).send(await this.userService.getUserById(userId))
       },
     )
   }
