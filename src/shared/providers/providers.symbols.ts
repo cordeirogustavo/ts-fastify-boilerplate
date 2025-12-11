@@ -4,6 +4,7 @@ const ProvidersSymbols = {
   RedisFactory: Symbol.for('RedisFactory'),
   NodeCacheFactory: Symbol.for('NodeCacheFactory'),
   CacheFactory: Symbol.for('CacheFactory'),
+  DatabaseProvider: Symbol.for('DatabaseProvider'),
 }
 
 export { ProvidersSymbols }

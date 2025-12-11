@@ -21,11 +21,11 @@ export function setupErrorHandler(app: FastifyTypedInstance) {
         issues: error.validation,
       })
     }
-
     reply.status(500).send({
       statusCode: 500,
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Something went wrong',
+      metadata: error,
     })
   })
 }

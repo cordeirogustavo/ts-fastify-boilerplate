@@ -27,15 +27,7 @@ export class ConfigFactory implements IFactory<AppConfig> {
       cdnUrl: process.env.CDN_URL || '',
       appPort: Number(process.env.APP_PORT) || 3000,
       appSecret: process.env.APP_SECRET || 'your-secret-key',
-      database: {
-        databaseProvider: process.env.DATABASE_PROVIDER || 'pg',
-        databaseName: process.env.DATABASE_NAME || 'db-name',
-        databaseHost: process.env.DATABASE_HOST || 'localhost',
-        databasePort: Number(process.env.DATABASE_PORT) || 5432,
-        databaseUser: process.env.DATABASE_USERNAME || 'postgres',
-        databasePassword: process.env.DATABASE_PASSWORD || 'teste',
-        ignoreSsl: process.env.DATABASE_IGNORE_SSL === 'true' || false,
-      },
+      databaseUrl: `postgresql://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}?sslmode=${process.env.DATABASE_IGNORE_SSL === 'true' ? 'disable' : 'require'}`,
       google: {
         oAuth: {
           clientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
@@ -71,8 +63,7 @@ export class ConfigFactory implements IFactory<AppConfig> {
         emailTimeoutInMinutes: Number(process.env.OTP_TIMEOUT_IN_MINUTES) || 5,
       },
       cache: {
-        provider:
-          (process.env.CACHE_PROVIDER as CacheProviderConfig) || 'NodeCache',
+        provider: (process.env.CACHE_PROVIDER as CacheProviderConfig) || 'NodeCache',
         redis: {
           host: process.env.REDIS_HOST || '',
           port: Number(process.env.REDIS_PORT) || 6379,
@@ -82,8 +73,7 @@ export class ConfigFactory implements IFactory<AppConfig> {
           password: process.env.REDIS_PASSWORD || '',
         },
       },
-      minAttemptsToBlockUserLogin:
-        Number(process.env.MIN_ATTEMPTS_TO_BLOCK_USER_LOGIN) || 3,
+      minAttemptsToBlockUserLogin: Number(process.env.MIN_ATTEMPTS_TO_BLOCK_USER_LOGIN) || 3,
     }
   }
 }

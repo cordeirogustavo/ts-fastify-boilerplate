@@ -19,18 +19,18 @@ const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000
 
 async function bootstrap() {
   const app = fastify({
-    logger: {
-      transport:
-        process.env.NODE_ENV !== 'production'
-          ? {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: 'HH:MM:ss',
-              },
-            }
-          : undefined,
-    },
+    // logger: {
+    //   transport:
+    //     process.env.NODE_ENV !== 'production'
+    //       ? {
+    //           target: 'pino-pretty',
+    //           options: {
+    //             colorize: true,
+    //             translateTime: 'HH:MM:ss',
+    //           },
+    //         }
+    //       : undefined,
+    // },
   }).withTypeProvider<ZodTypeProvider>()
 
   app.setValidatorCompiler(validatorCompiler)

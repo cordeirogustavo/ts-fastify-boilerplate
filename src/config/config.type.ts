@@ -9,15 +9,7 @@ export interface AppConfig {
   cdnUrl: string
   appPort: number
   appSecret: string
-  database: {
-    databaseProvider: string
-    databaseName: string
-    databaseHost: string
-    databasePort: number
-    databaseUser: string
-    databasePassword: string
-    ignoreSsl: boolean
-  }
+  databaseUrl: string
   google: {
     oAuth: {
       clientId: string

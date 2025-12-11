@@ -34,15 +34,16 @@ export const UserDTO = z.object({
   userId: z.uuid(),
   name: z.string(),
   email: z.string(),
-  userPicture: z.string(),
+  userPicture: z.string().optional().nullable(),
   mfaEnabled: z.number().min(0).max(1),
-  mfaMethod: z.enum(['EMAIL', 'APP']).optional(),
+  mfaMethod: z.enum(['EMAIL', 'APP']).optional().nullable(),
   mfaKey: z
     .object({
       secret: z.string(),
       url: z.string(),
     })
-    .optional(),
+    .optional()
+    .nullable(),
   provider: z.string(),
 })
 

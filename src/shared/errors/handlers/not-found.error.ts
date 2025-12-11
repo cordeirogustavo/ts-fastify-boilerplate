@@ -1,8 +1,8 @@
 import { BaseError } from './base.error'
 
 export class NotFoundError extends BaseError {
-  constructor(resource: string, metadata?: unknown) {
-    super(`${resource} not found`, {
+  constructor(message: string, metadata?: unknown) {
+    super(message, {
       status: 404,
       code: 'NOT_FOUND',
       metadata,
