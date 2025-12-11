@@ -7,7 +7,6 @@ import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
 import {
   jsonSchemaTransform,
-  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -50,7 +49,6 @@ app.register(fastifySwagger, {
     },
   },
   transform: jsonSchemaTransform,
-  transformObject: jsonSchemaTransformObject,
 })
 
 app.register(ScalarApiReference, {
@@ -63,7 +61,7 @@ appRouter.register(app)
 
 setupErrorHandler(app)
 
-app.listen({ port: port, host: '0.0.0.0' }, () => {
+app.listen({ port: port, host: '0.0.0.0' }).then(() => {
   console.log(`Server is running on port: ${port}`)
   console.log('Docs available at: /docs')
 })

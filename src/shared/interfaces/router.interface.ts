@@ -1,5 +1,5 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyTypedInstance } from '../types'
 
 export interface IRouter {
-  register(app: FastifyInstance): Promise<void> | void
+  register(app: FastifyTypedInstance): Promise<void> | void
 }

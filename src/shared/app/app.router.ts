@@ -1,7 +1,7 @@
-import type { FastifyInstance } from 'fastify'
 import { inject, injectable } from 'tsyringe'
 import { UserSymbols } from '@/domain/user'
 import type { IRouter } from '@/shared/interfaces'
+import type { FastifyTypedInstance } from '../types'
 
 @injectable()
 export class AppRouter implements IRouter {
@@ -10,7 +10,7 @@ export class AppRouter implements IRouter {
     private userRouter: IRouter,
   ) {}
 
-  public register(app: FastifyInstance): void {
+  public register(app: FastifyTypedInstance): void {
     this.userRouter.register(app)
   }
 }

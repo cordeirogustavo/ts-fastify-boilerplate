@@ -1,7 +1,8 @@
-import type { FastifyError, FastifyInstance } from 'fastify'
+import type { FastifyError } from 'fastify'
+import type { FastifyTypedInstance } from '@/shared/types'
 import { BaseError } from './base.error'
 
-export function setupErrorHandler(app: FastifyInstance) {
+export function setupErrorHandler(app: FastifyTypedInstance) {
   app.setErrorHandler((error: FastifyError | BaseError, _req, reply) => {
     if (error instanceof BaseError) {
       return reply.status(error.status).send({
