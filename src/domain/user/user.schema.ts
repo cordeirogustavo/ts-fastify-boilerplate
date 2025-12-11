@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { ErrorSchema } from '@/shared/errors'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
@@ -45,11 +44,6 @@ export const UserDTO = z.object({
     })
     .optional(),
   provider: z.string(),
-})
-
-export const GetUserById = z.object({
-  params: z.object({ userId: z.uuid() }),
-  response: { 200: UserDTO.shape, 404: ErrorSchema.shape },
 })
 
 export const CreateUserSchema = z.object({
