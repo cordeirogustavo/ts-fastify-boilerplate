@@ -3,10 +3,11 @@ import { inject, singleton } from 'tsyringe'
 import { user } from '@/database/schema'
 import { ProvidersSymbols } from '@/shared/providers'
 import type { DatabaseProvider } from '@/shared/providers/database-provider'
-import type { TMfaKey, TUser, TUserFilters } from './user.types'
+import type { TCreateUserInput, TMfaKey, TUser, TUserFilters } from './user.types'
 
 export interface IUserRepository {
   getUser(filters: TUserFilters): Promise<TUser | null>
+  createUser(userData: TCreateUserInput): Promise<TUser>
 }
 
 @singleton()
@@ -28,5 +29,16 @@ export class UserRepository implements IUserRepository {
     const where = this.buildUserWhere(filters)
     const result = await this.databaseProvider.db.select().from(user).where(where).limit(1)
     return result.length ? { ...result[0], mfaKey: result[0].mfaKey as TMfaKey } : null
+  }
+
+  async createUser(userData: TCreateUserInput): Promise<TUser> {
+    const created = await this.databaseProvider.db
+      .insert(user)
+      .values({
+        ...userData,
+        provider: userData.provider || 'API',
+      })
+      .returning()
+    return { ...created[0], mfaKey: created[0].mfaKey as TMfaKey }
   }
 }

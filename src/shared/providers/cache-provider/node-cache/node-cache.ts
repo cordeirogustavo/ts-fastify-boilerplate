@@ -40,15 +40,10 @@ export class NodeCache<Entity> implements BaseCache<Entity> {
     data?: T,
     ttl?: string | number,
   ): Promise<boolean> {
-    const timeInSeconds =
-      typeof ttl === 'string' ? ms(ttl as ms.StringValue) / 1000 : (ttl ?? 0)
+    const timeInSeconds = typeof ttl === 'string' ? ms(ttl as ms.StringValue) / 1000 : (ttl ?? 0)
 
     if (typeof identifierOrData === 'string') {
-      return this.cache.set<T>(
-        this.fullKey(identifierOrData),
-        data!,
-        timeInSeconds,
-      )
+      return this.cache.set<T>(this.fullKey(identifierOrData), data!, timeInSeconds)
     } else {
       return this.cache.set<T>(
         this.fullKey(''),

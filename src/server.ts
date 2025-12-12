@@ -2,7 +2,6 @@ import 'reflect-metadata'
 import '@/shared/app/app.container'
 
 import { fastifyCors } from '@fastify/cors'
-import fastifyJwt from '@fastify/jwt'
 import { fastifySwagger } from '@fastify/swagger'
 import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
@@ -40,10 +39,6 @@ async function bootstrap() {
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.addHook('onRequest', languageMiddleware)
-
-  app.register(fastifyJwt, {
-    secret: config.appSecret,
-  })
 
   app.decorate('authenticate', authMiddleware)
 

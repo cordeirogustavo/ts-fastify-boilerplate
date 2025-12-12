@@ -3,7 +3,7 @@ import z from 'zod'
 import { ErrorSchema } from '@/shared/errors'
 import type { IRouter } from '@/shared/interfaces'
 import type { FastifyTypedInstance } from '@/shared/types'
-import { UserDTO } from './user.schema'
+import { CreateUserSchema, UserDTO } from './user.schema'
 import type { IUserService } from './user.service'
 import { UserSymbols } from './user.symbols'
 
@@ -35,6 +35,26 @@ export class UserRouter implements IRouter {
       async (req, reply) => {
         const { userId } = req.params
         reply.status(200).send(await this.userService.getUserById(userId))
+      },
+    )
+
+    app.post(
+      `${PREFIX}`,
+      {
+        schema: {
+          tags: ['user'],
+          summary: 'createUser',
+          description: 'Create user',
+          body: z.object(CreateUserSchema.shape),
+          response: {
+            201: z.object(UserDTO.shape),
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const user = await this.userService.createUser(req.body, req.language)
+        reply.status(201).send(user)
       },
     )
   }

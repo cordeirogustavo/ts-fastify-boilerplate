@@ -48,9 +48,7 @@ export const UserDTO = z.object({
   provider: z.enum(['API', 'GOOGLE', 'FACEBOOK']).nullable().optional(),
 })
 
-export const CreateUserSchema = z.object({
-  body: z.object(UserSchema.omit({ userId: true }).shape),
-})
+export const CreateUserSchema = z.object(UserSchema.omit({ userId: true }).shape)
 
 export const UpdateUserSchema = z.object({
   params: z.object({ userId: z.uuid() }),
