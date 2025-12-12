@@ -8,6 +8,7 @@ import type { TCreateUserInput, TMfaKey, TUser, TUserFilters } from './user.type
 export interface IUserRepository {
   getUser(filters: TUserFilters): Promise<TUser | null>
   createUser(userData: TCreateUserInput): Promise<TUser>
+  updateUser(userId: string, userData: Partial<TUser>): Promise<TUser | null>
 }
 
 @singleton()
@@ -32,13 +33,26 @@ export class UserRepository implements IUserRepository {
   }
 
   async createUser(userData: TCreateUserInput): Promise<TUser> {
-    const created = await this.databaseProvider.db
+    const [created] = await this.databaseProvider.db
       .insert(user)
       .values({
         ...userData,
         provider: userData.provider || 'API',
       })
       .returning()
-    return { ...created[0], mfaKey: created[0].mfaKey as TMfaKey }
+    return { ...created, mfaKey: created.mfaKey as TMfaKey }
+  }
+
+  async updateUser(userId: string, userData: Partial<TUser>): Promise<TUser | null> {
+    const dataToSave = Object.fromEntries(
+      Object.entries(userData).filter(([_, value]) => value !== undefined),
+    )
+    const [updated] = await this.databaseProvider.db
+      .update(user)
+      .set(dataToSave)
+      .where(eq(user.userId, userId))
+      .returning()
+
+    return { ...updated, mfaKey: updated.mfaKey as TMfaKey }
   }
 }

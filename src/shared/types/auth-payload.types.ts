@@ -1,10 +1,4 @@
-import type { TUserPermissionDTO } from './user-permission.types'
+import type { z } from 'zod'
+import type { AuthPayloadSchema } from '../errors'
 
-export type TAuthPayload = {
-  userId: string
-  email: string
-  name: string
-  userPicture: string
-  token: string
-  scopes: TUserPermissionDTO
-}
+export type TAuthPayload = z.infer<typeof AuthPayloadSchema>

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { inject, singleton } from 'tsyringe'
+import { type AppConfig, ConfigSymbols } from '@/config'
 import { CastError, NotFoundError } from '@/shared/errors'
 import {
   type IFacebookAuthProvider,
@@ -13,21 +14,24 @@ import {
   ServicesSymbols,
   type TokenService,
 } from '@/shared/services'
-import type { TLanguages } from '@/shared/types'
-import { capitalizeWords } from '@/shared/utils'
+import type { TAuthPayload, TLanguages } from '@/shared/types'
+import { capitalizeWords, mountMediaUrl } from '@/shared/utils'
 import { mapUserToUserDto } from './user.mapper'
 import type { IUserRepository } from './user.repository'
 import { UserSymbols } from './user.symbols'
-import type { TCreateUserInput, TUserDTO } from './user.types'
+import type { TCreateUserInput, TUser, TUserDTO } from './user.types'
 
 export interface IUserService {
   getUserById(userId: string): Promise<TUserDTO>
   createUser(userData: TCreateUserInput, language: TLanguages): Promise<TUserDTO>
+  confirmAccount(token: string): Promise<TAuthPayload>
 }
 
 @singleton()
 export class UserService implements IUserService {
   constructor(
+    @inject(ConfigSymbols.AppConfig)
+    private readonly appConfig: AppConfig,
     @inject(UserSymbols.UserRepository)
     protected userRepository: IUserRepository,
     @inject(ServicesSymbols.TokenService)
@@ -44,6 +48,31 @@ export class UserService implements IUserService {
     private readonly totpService: ITOTPService,
   ) {}
 
+  private async authenticate(user: TUser): Promise<TAuthPayload> {
+    const userPicture = mountMediaUrl(this.appConfig.cdnUrl, user.userPicture || '')
+    const userPermissions = {
+      global: [],
+      organizations: {},
+    }
+    return {
+      userId: user.userId,
+      email: user?.email || '',
+      name: user.name,
+      userPicture,
+      scopes: userPermissions,
+      token: this.tokenService.sign(
+        {
+          userId: user.userId,
+          name: user.name,
+          email: user.email,
+          userPicture,
+          scopes: userPermissions,
+        },
+        '1d',
+      ),
+    }
+  }
+
   async getUserById(userId: string): Promise<TUserDTO> {
     const user = await this.userRepository.getUser({ userId })
     if (!user) throw new NotFoundError('userNotFound')
@@ -56,19 +85,16 @@ export class UserService implements IUserService {
       provider: 'API',
     })
     if (alreadyExists) throw new CastError('userAlreadyExists')
-
     const createdUser = await this.userRepository.createUser({
       ...userData,
       name: capitalizeWords(userData?.name),
       email: userData?.email?.toLocaleLowerCase().trim(),
       password: userData?.password ? await bcrypt.hash(userData.password, 10) : '',
       mfaKey: this.totpService.generateKey(userData.email),
+      status: 'PENDING',
     })
-
     const user = mapUserToUserDto(createdUser)
-
     if (!createdUser.email) return user
-
     const confirmToken = this.tokenService.sign(
       {
         userId: createdUser.userId,
@@ -77,7 +103,6 @@ export class UserService implements IUserService {
       },
       '1d',
     )
-
     await this.emailService.sendAccountConfirmationEmail(
       createdUser.email,
       createdUser.name,
@@ -85,5 +110,20 @@ export class UserService implements IUserService {
       confirmToken,
     )
     return user
+  }
+  async confirmAccount(token: string): Promise<TAuthPayload> {
+    const decoded = this.tokenService.verify<{
+      userId: string
+      email: string
+      type: string
+    }>(token)
+    if (!decoded.valid) throw new CastError('invalidToken')
+    if (!decoded.payload?.type || decoded.payload.type !== 'CONFIRM_ACCOUNT')
+      throw new CastError('invalidToken')
+    const confirmedUser = await this.userRepository.updateUser(decoded.payload?.userId, {
+      status: 'ACTIVE',
+    })
+    if (!confirmedUser) throw new CastError('invalidToken')
+    return this.authenticate(confirmedUser)
   }
 }

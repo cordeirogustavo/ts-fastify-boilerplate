@@ -1,9 +1,9 @@
 import { inject, singleton } from 'tsyringe'
 import z from 'zod'
-import { ErrorSchema } from '@/shared/errors'
+import { AuthPayloadSchema, ErrorSchema } from '@/shared/errors'
 import type { IRouter } from '@/shared/interfaces'
 import type { FastifyTypedInstance } from '@/shared/types'
-import { CreateUserSchema, UserDTO } from './user.schema'
+import { ConfirmAccountSchema, CreateUserSchema, UserDTO } from './user.schema'
 import type { IUserService } from './user.service'
 import { UserSymbols } from './user.symbols'
 
@@ -55,6 +55,26 @@ export class UserRouter implements IRouter {
       async (req, reply) => {
         const user = await this.userService.createUser(req.body, req.language)
         reply.status(201).send(user)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/confirm-account`,
+      {
+        schema: {
+          tags: ['user'],
+          summary: 'confirmAccount',
+          description: 'Confirm account',
+          body: z.object(ConfirmAccountSchema.shape),
+          response: {
+            200: AuthPayloadSchema,
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const user = await this.userService.confirmAccount(req.body.token)
+        reply.status(200).send(user)
       },
     )
   }

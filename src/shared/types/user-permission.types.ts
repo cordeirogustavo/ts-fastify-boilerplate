@@ -1,10 +1,4 @@
-export type TUserPermissionDTO = {
-  global: string[];
-  organizations: {
-    [key: string]: {
-      name: string;
-      isDefault: boolean;
-      scopes: string[];
-    };
-  };
-};
+import type { z } from 'zod'
+import type { UserPermissionSchema } from '../errors'
+
+export type TUserPermissionDTO = z.infer<typeof UserPermissionSchema>
