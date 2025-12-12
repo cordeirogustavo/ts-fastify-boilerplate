@@ -16,6 +16,8 @@ import {
 } from '@/shared/services'
 import type { TAuthPayload, TLanguages } from '@/shared/types'
 import { capitalizeWords, mountMediaUrl } from '@/shared/utils'
+import { UserLoginAttemptsSymbols } from '../user-login-attempts'
+import type { IUserLoginAttemptsService } from '../user-login-attempts/user-login-attempts.interface'
 import { mapUserToUserDto } from './user.mapper'
 import type { IUserRepository } from './user.repository'
 import { UserSymbols } from './user.symbols'
@@ -46,6 +48,8 @@ export class UserService implements IUserService {
     private readonly s3Service: IAWSS3Service,
     @inject(ServicesSymbols.TOTPService)
     private readonly totpService: ITOTPService,
+    @inject(UserLoginAttemptsSymbols.UserLoginAttemptsService)
+    private readonly userLoginAttemptsService: IUserLoginAttemptsService,
   ) {}
 
   private async authenticate(user: TUser): Promise<TAuthPayload> {
