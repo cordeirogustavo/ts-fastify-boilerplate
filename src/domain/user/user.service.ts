@@ -1,5 +1,6 @@
 import { inject, singleton } from 'tsyringe'
 import { NotFoundError } from '@/shared/errors'
+import { mapUserToUserDto } from './user.mapper'
 import type { IUserRepository } from './user.repository'
 import { UserSymbols } from './user.symbols'
 import type { TUserDTO } from './user.types'
@@ -14,9 +15,10 @@ export class UserService implements IUserService {
     @inject(UserSymbols.UserRepository)
     protected userRepository: IUserRepository,
   ) {}
+
   async getUserById(userId: string): Promise<TUserDTO> {
-    const user = await this.userRepository.getUserById(userId)
+    const user = await this.userRepository.getUser({ userId })
     if (!user) throw new NotFoundError('userNotFound')
-    return user
+    return mapUserToUserDto(user)
   }
 }

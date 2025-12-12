@@ -12,22 +12,23 @@ export const imageFileSchema = z
     message: 'Format not supported. Use JPEG, PNG, GIF or WEBP.',
   })
 
+export const MfaKey = z.object({
+  secret: z.string(),
+  url: z.string(),
+})
+
 export const UserSchema = z.object({
+  userId: z.uuid(),
   name: z.string().min(10),
   email: z.email(),
-  password: z.string().min(6),
-  status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional(),
-  provider: z.enum(['api', 'google', 'facebook']).optional(),
-  userPicture: z.string().optional(),
-  providerIdentifier: z.string().optional(),
-  mfaEnabled: z.number().min(0).max(1).optional(),
-  mfaKey: z
-    .object({
-      secret: z.string(),
-      url: z.string(),
-    })
-    .optional(),
-  mfaMethod: z.enum(['EMAIL', 'APP']).optional(),
+  password: z.string().min(6).nullable(),
+  status: z.enum(['ACTIVE', 'PENDING', 'DEACTIVATED']).nullable().optional(),
+  provider: z.enum(['API', 'GOOGLE', 'FACEBOOK']).nullable().optional(),
+  userPicture: z.string().nullable().optional(),
+  providerIdentifier: z.string().nullable().optional(),
+  mfaEnabled: z.number().min(0).max(1).nullable().optional(),
+  mfaKey: MfaKey.optional(),
+  mfaMethod: z.enum(['EMAIL', 'APP']).nullable().optional(),
 })
 
 export const UserDTO = z.object({
@@ -44,16 +45,17 @@ export const UserDTO = z.object({
     })
     .optional()
     .nullable(),
-  provider: z.string(),
+  provider: z.enum(['API', 'GOOGLE', 'FACEBOOK']).nullable().optional(),
 })
 
 export const CreateUserSchema = z.object({
-  body: z.object(UserSchema.shape),
+  body: z.object(UserSchema.omit({ userId: true }).shape),
 })
 
 export const UpdateUserSchema = z.object({
   params: z.object({ userId: z.uuid() }),
   body: z.object(UserSchema.shape).omit({
+    userId: true,
     email: true,
     password: true,
     provider: true,

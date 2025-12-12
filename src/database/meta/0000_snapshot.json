@@ -25,7 +25,7 @@
           "name": "email",
           "type": "varchar(150)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "password": {
           "name": "password",
@@ -42,7 +42,8 @@
         },
         "provider": {
           "name": "provider",
-          "type": "varchar(100)",
+          "type": "UserProvider",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -119,6 +120,15 @@
       "values": [
         "EMAIL",
         "APP"
+      ],
+      "schema": "public"
+    },
+    "public.UserProvider": {
+      "name": "UserProvider",
+      "values": [
+        "API",
+        "GOOGLE",
+        "FACEBOOK"
       ],
       "schema": "public"
     },
