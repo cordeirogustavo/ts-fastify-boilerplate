@@ -1,14 +1,15 @@
 import type { FastifyError } from 'fastify'
 import type { FastifyTypedInstance } from '@/shared/types'
+import { getTranslate } from '@/shared/utils'
 import { BaseError } from './base.error'
 
 export function setupErrorHandler(app: FastifyTypedInstance) {
-  app.setErrorHandler((error: FastifyError | BaseError, _req, reply) => {
+  app.setErrorHandler((error: FastifyError | BaseError, req, reply) => {
     if (error instanceof BaseError) {
       return reply.status(error.status).send({
         statusCode: error.status,
         code: error.code,
-        message: error.message,
+        message: getTranslate(error.message, req.language, error.messageParams),
         metadata: error.metadata,
       })
     }

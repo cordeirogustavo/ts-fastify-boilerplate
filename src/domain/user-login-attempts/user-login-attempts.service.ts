@@ -48,7 +48,7 @@ export class UserLoginAttemptsService implements IUserLoginAttemptsService {
     attempts: TUserLoginAttempts,
   ): {
     key: string
-    params: Record<string, any>
+    params: Record<string, unknown>
   } {
     if (attempts.attempts >= this.appConfig.minAttemptsToBlockUserLogin) {
       const [blockPeriod, newBlockUntil] = this.getBlockPeriodAndEpochByAttempts(attempts.attempts)

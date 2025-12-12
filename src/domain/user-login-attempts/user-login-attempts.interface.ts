@@ -11,7 +11,7 @@ export interface IUserLoginAttemptsService {
     attempts: TUserLoginAttempts,
   ): {
     key: string
-    params: Record<string, any>
+    params: Record<string, unknown>
   }
   getUserPasscode(userId: string): Promise<string | undefined>
   setUserPasscode(userId: string, passcode: string, ttl: number): Promise<void>

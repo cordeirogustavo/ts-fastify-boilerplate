@@ -62,8 +62,15 @@ export const ForgotPasswordSchema = z.object({
 
 export const LoginSchema = z.object({
   email: z.email(),
-  password: z.string().min(6),
+  password: z.string(),
   recaptchaToken: z.string().optional(),
+})
+
+export const LoginRequirePasscodeSchema = z.object({
+  userId: z.uuid(),
+  email: z.email(),
+  requirePasscode: z.boolean(),
+  method: z.enum(['EMAIL', 'APP']),
 })
 
 export const LoginWithGoogleSchema = z.object({

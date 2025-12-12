@@ -3,7 +3,13 @@ import z from 'zod'
 import { AuthPayloadSchema, ErrorSchema } from '@/shared/errors'
 import type { IRouter } from '@/shared/interfaces'
 import type { FastifyTypedInstance } from '@/shared/types'
-import { ConfirmAccountSchema, CreateUserSchema, UserDTO } from './user.schema'
+import {
+  ConfirmAccountSchema,
+  CreateUserSchema,
+  LoginRequirePasscodeSchema,
+  LoginSchema,
+  UserDTO,
+} from './user.schema'
 import type { IUserService } from './user.service'
 import { UserSymbols } from './user.symbols'
 
@@ -43,8 +49,9 @@ export class UserRouter implements IRouter {
       {
         schema: {
           tags: ['user'],
-          summary: 'createUser',
-          description: 'Create user',
+          operationId: 'createUser',
+          summary: 'Create new user account',
+          description: 'Register a new user account with email verification',
           body: z.object(CreateUserSchema.shape),
           response: {
             201: z.object(UserDTO.shape),
@@ -63,8 +70,9 @@ export class UserRouter implements IRouter {
       {
         schema: {
           tags: ['user'],
-          summary: 'confirmAccount',
-          description: 'Confirm account',
+          operationId: 'confirmAccount',
+          summary: 'Confirm user account',
+          description: 'Confirm user account using verification token sent via email',
           body: z.object(ConfirmAccountSchema.shape),
           response: {
             200: AuthPayloadSchema,
@@ -75,6 +83,31 @@ export class UserRouter implements IRouter {
       async (req, reply) => {
         const user = await this.userService.confirmAccount(req.body.token)
         reply.status(200).send(user)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/login`,
+      {
+        schema: {
+          tags: ['user'],
+          operationId: 'loginUser',
+          summary: 'User login',
+          description: 'Authenticate user with email and password',
+          body: z.object(LoginSchema.shape),
+          response: {
+            200: z.union([
+              AuthPayloadSchema.describe('Authenticated user'),
+              LoginRequirePasscodeSchema.describe('Require passcode'),
+            ]),
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { email, password } = req.body
+        const auth = await this.userService.login(email, password, req.language)
+        reply.status(200).send(auth)
       },
     )
   }

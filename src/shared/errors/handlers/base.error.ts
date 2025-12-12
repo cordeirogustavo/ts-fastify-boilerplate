@@ -2,9 +2,10 @@ export class BaseError extends Error {
   public readonly status: number
   public readonly code: string
   public readonly metadata?: unknown
+  public readonly messageParams?: Record<string, unknown>
 
   constructor(
-    message: string,
+    message?: string | { key: string; params: Record<string, unknown> },
     {
       status = 500,
       code = 'INTERNAL_ERROR',
@@ -15,7 +16,8 @@ export class BaseError extends Error {
       metadata?: unknown
     } = {},
   ) {
-    super(message)
+    super(typeof message === 'string' ? message : message?.key)
+    this.messageParams = typeof message === 'string' ? {} : message?.params
     this.status = status
     this.code = code
     this.metadata = metadata
