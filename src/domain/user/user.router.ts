@@ -8,7 +8,10 @@ import {
   CreateUserSchema,
   LoginRequirePasscodeSchema,
   LoginSchema,
+  LoginWithFacebookSchema,
+  LoginWithGoogleSchema,
   UserDTO,
+  ValidatePasscodeSchema,
 } from './user.schema'
 import type { IUserService } from './user.service'
 import { UserSymbols } from './user.symbols'
@@ -113,6 +116,81 @@ export class UserRouter implements IRouter {
         const { email, password } = req.body
         const auth = await this.userService.login(email, password, req.language)
         reply.status(200).send(auth)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/login-with-google`,
+      {
+        schema: {
+          tags: [PREFIX],
+          operationId: 'loginWithGoogle',
+          summary: 'Login with Google',
+          description: 'Authenticate user using Google OAuth',
+          security: [],
+          body: z.object(LoginWithGoogleSchema.shape),
+          response: {
+            200: z.union([
+              AuthPayloadSchema.describe('Authenticated user'),
+              LoginRequirePasscodeSchema.describe('Require passcode'),
+            ]),
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { idToken } = req.body
+        const googleUser = await this.userService.loginWithGoogle(idToken, req.language)
+        reply.status(200).send(googleUser)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/login-with-facebook`,
+      {
+        schema: {
+          tags: [PREFIX],
+          operationId: 'loginWithFacebook',
+          summary: 'Login with Facebook',
+          description: 'Authenticate user using Facebook OAuth',
+          security: [],
+          body: z.object(LoginWithFacebookSchema.shape),
+          response: {
+            200: z.union([
+              AuthPayloadSchema.describe('Authenticated user'),
+              LoginRequirePasscodeSchema.describe('Require passcode'),
+            ]),
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { token, userId } = req.body
+        const facebookUser = await this.userService.loginWithFacebook(userId, token, req.language)
+        reply.status(200).send(facebookUser)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/validate-passcode`,
+      {
+        schema: {
+          tags: [PREFIX],
+          operationId: 'validatePasscode',
+          summary: 'Validate two-factor authentication code',
+          description: 'Validate TOTP passcode for two-factor authentication',
+          security: [],
+          body: z.object(ValidatePasscodeSchema.shape),
+          response: {
+            200: AuthPayloadSchema,
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { passcode, userId } = req.body
+        const user = await this.userService.validatePasscode(userId, passcode)
+        reply.status(200).send(user)
       },
     )
   }

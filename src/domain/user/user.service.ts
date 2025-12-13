@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { inject, singleton } from 'tsyringe'
 import { type AppConfig, ConfigSymbols } from '@/config'
-import { CastError, NotFoundError } from '@/shared/errors'
+import { CastError, ExpiredError, NotFoundError } from '@/shared/errors'
 import {
   type IFacebookAuthProvider,
   type IGoogleAuthProvider,
@@ -33,6 +33,16 @@ export interface IUserService {
     password: string,
     language: TLanguages,
   ): Promise<TAuthPayload | TLoginRequirePasscode>
+  loginWithGoogle(
+    idToken: string,
+    language: TLanguages,
+  ): Promise<TAuthPayload | TLoginRequirePasscode>
+  loginWithFacebook(
+    userId: string,
+    token: string,
+    language: TLanguages,
+  ): Promise<TAuthPayload | TLoginRequirePasscode>
+  validatePasscode(userId: string, passcode: string): Promise<TAuthPayload>
 }
 
 @singleton()
@@ -131,6 +141,7 @@ export class UserService implements IUserService {
     )
     return user
   }
+
   async confirmAccount(token: string): Promise<TAuthPayload> {
     const decoded = this.tokenService.verify<{
       userId: string
@@ -180,6 +191,112 @@ export class UserService implements IUserService {
         method: user.mfaMethod || 'APP',
       }
     }
+    return this.authenticate(user)
+  }
+
+  async loginWithGoogle(
+    idToken: string,
+    language: TLanguages,
+  ): Promise<TAuthPayload | TLoginRequirePasscode> {
+    const googleUser = await this.googleAuthProvider.authenticate(idToken)
+    if (!googleUser) throw new CastError('failedGoogleLogin')
+    let user = await this.userRepository.getUser({ email: googleUser.email, provider: 'GOOGLE' })
+
+    if (!user) {
+      user = await this.userRepository.createUser({
+        email: googleUser.email,
+        name: capitalizeWords(googleUser.name),
+        provider: 'GOOGLE',
+        userPicture: googleUser.picture,
+        status: 'ACTIVE',
+        providerIdentifier: googleUser.googleId,
+        password: '',
+        mfaKey: this.totpService.generateKey(googleUser.email),
+      })
+    }
+
+    if (user.mfaEnabled === 1) {
+      if (user.mfaMethod === 'EMAIL') await this.sendMailPasscode(user, language)
+      return {
+        userId: user.userId,
+        email: user.email,
+        requirePasscode: true,
+        method: user.mfaMethod || 'APP',
+      }
+    }
+    return this.authenticate(user)
+  }
+
+  async loginWithFacebook(
+    userId: string,
+    token: string,
+    language: TLanguages,
+  ): Promise<TAuthPayload | TLoginRequirePasscode> {
+    const facebookUser = await this.facebookAuthProvider.authenticate(userId, token)
+    if (!facebookUser) throw new CastError('failedFacebookLogin')
+    let user = await this.userRepository.getUser({
+      email: facebookUser.email,
+      provider: 'FACEBOOK',
+    })
+
+    if (!user) {
+      user = await this.userRepository.createUser({
+        email: facebookUser.email,
+        name: capitalizeWords(facebookUser.name),
+        provider: 'FACEBOOK',
+        userPicture: facebookUser.picture,
+        status: 'ACTIVE',
+        providerIdentifier: facebookUser.facebookId,
+        password: '',
+        mfaKey: this.totpService.generateKey(facebookUser.email),
+      })
+    }
+
+    if (user.mfaEnabled === 1) {
+      if (user.mfaMethod === 'EMAIL') {
+        await this.sendMailPasscode(user, language)
+      }
+      return {
+        userId: user.userId,
+        email: user.email,
+        requirePasscode: true,
+        method: user.mfaMethod || 'APP',
+      }
+    }
+    return this.authenticate(user)
+  }
+
+  async validatePasscode(userId: string, passcode: string): Promise<TAuthPayload> {
+    const user = await this.userRepository.getUser({ userId })
+    if (!user) throw new NotFoundError('userNotFound')
+    if (!user.mfaKey) throw new CastError('mfaNotEnabled')
+    const userAttempts = await this.userLoginAttemptsService.getUserAttempts(user.userId)
+    userAttempts.attempts++
+
+    let isValidatedByEmail = false
+    if (user.mfaMethod === 'EMAIL') {
+      const userPasscode = await this.userLoginAttemptsService.getUserPasscode(user.userId)
+      if (!userPasscode) {
+        throw new ExpiredError('passcodeExpired')
+      }
+      isValidatedByEmail = userPasscode === passcode
+    }
+
+    const passcodeMatch =
+      user.mfaMethod === 'EMAIL'
+        ? isValidatedByEmail
+        : this.totpService.validatePasscode(passcode, user.mfaKey.secret)
+
+    if (!passcodeMatch) {
+      const error = this.userLoginAttemptsService.getAttemptsError(
+        userId,
+        'validatePasscode',
+        userAttempts,
+      )
+      throw new CastError(error)
+    }
+    await this.userLoginAttemptsService.delUserPasscode(userId)
+    await this.userLoginAttemptsService.delAttempts(userId)
     return this.authenticate(user)
   }
 }
