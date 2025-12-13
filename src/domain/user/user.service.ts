@@ -107,7 +107,7 @@ export class UserService implements IUserService {
     if (alreadyExists) throw new CastError('userAlreadyExists')
     const createdUser = await this.userRepository.createUser({
       ...userData,
-      name: capitalizeWords(userData?.name),
+      name: capitalizeWords(userData.name),
       email: userData?.email?.toLocaleLowerCase().trim(),
       password: userData?.password ? await bcrypt.hash(userData.password, 10) : '',
       mfaKey: this.totpService.generateKey(userData.email),

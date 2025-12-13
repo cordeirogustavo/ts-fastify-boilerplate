@@ -26,14 +26,16 @@ export class UserRouter implements IRouter {
     app.get(
       `${PREFIX}/:userId`,
       {
-        // onRequest: app.authenticate,
+        onRequest: app.authenticate,
         schema: {
-          tags: ['user'],
-          summary: 'getUserById',
+          tags: [PREFIX],
+          operationId: 'getUserById',
+          summary: 'Get user by id',
           description: 'Get user by id',
+          security: [{ bearerAuth: [] }],
           params: z.object({ userId: z.uuid() }),
           response: {
-            200: z.object(UserDTO.shape),
+            200: UserDTO,
             404: ErrorSchema,
           },
         },
@@ -48,13 +50,14 @@ export class UserRouter implements IRouter {
       `${PREFIX}`,
       {
         schema: {
-          tags: ['user'],
+          tags: [PREFIX],
           operationId: 'createUser',
           summary: 'Create new user account',
           description: 'Register a new user account with email verification',
+          security: [],
           body: z.object(CreateUserSchema.shape),
           response: {
-            201: z.object(UserDTO.shape),
+            201: UserDTO,
             400: ErrorSchema,
           },
         },
@@ -69,10 +72,11 @@ export class UserRouter implements IRouter {
       `${PREFIX}/confirm-account`,
       {
         schema: {
-          tags: ['user'],
+          tags: [PREFIX],
           operationId: 'confirmAccount',
           summary: 'Confirm user account',
           description: 'Confirm user account using verification token sent via email',
+          security: [],
           body: z.object(ConfirmAccountSchema.shape),
           response: {
             200: AuthPayloadSchema,
@@ -90,10 +94,11 @@ export class UserRouter implements IRouter {
       `${PREFIX}/login`,
       {
         schema: {
-          tags: ['user'],
+          tags: [PREFIX],
           operationId: 'loginUser',
           summary: 'User login',
           description: 'Authenticate user with email and password',
+          security: [],
           body: z.object(LoginSchema.shape),
           response: {
             200: z.union([
