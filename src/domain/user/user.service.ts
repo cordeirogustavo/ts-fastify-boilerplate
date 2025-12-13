@@ -21,7 +21,13 @@ import type { IUserLoginAttemptsService } from '../user-login-attempts/user-logi
 import { mapUserToUserDto } from './user.mapper'
 import type { IUserRepository } from './user.repository'
 import { UserSymbols } from './user.symbols'
-import type { TCreateUserInput, TLoginRequirePasscode, TUser, TUserDTO } from './user.types'
+import type {
+  TCreateUserInput,
+  TForgotPassword,
+  TLoginRequirePasscode,
+  TUser,
+  TUserDTO,
+} from './user.types'
 
 export interface IUserService {
   sendMailPasscode(user: TUser, language: TLanguages): Promise<void>
@@ -43,6 +49,8 @@ export interface IUserService {
     language: TLanguages,
   ): Promise<TAuthPayload | TLoginRequirePasscode>
   validatePasscode(userId: string, passcode: string): Promise<TAuthPayload>
+  forgotPassword(email: string, language: TLanguages): Promise<TForgotPassword>
+  resetPassword(token: string, newPassword: string): Promise<TAuthPayload>
 }
 
 @singleton()
@@ -76,7 +84,7 @@ export class UserService implements IUserService {
     }
     return {
       userId: user.userId,
-      email: user?.email || '',
+      email: user.email,
       name: user.name,
       userPicture,
       scopes: userPermissions,
@@ -298,5 +306,66 @@ export class UserService implements IUserService {
     await this.userLoginAttemptsService.delUserPasscode(userId)
     await this.userLoginAttemptsService.delAttempts(userId)
     return this.authenticate(user)
+  }
+
+  async forgotPassword(email: string, language: TLanguages): Promise<TForgotPassword> {
+    const user = await this.userRepository.getUser({
+      email: email.toLocaleLowerCase().trim(),
+      provider: 'API',
+    })
+
+    if (!user)
+      return {
+        email: email,
+        success: true,
+      }
+
+    const resetPasswordToken = this.tokenService.sign(
+      {
+        userId: user.userId,
+        email: user.email,
+        type: 'FORGOT_PASSWORD',
+      },
+      '1d',
+    )
+    if (!user.email) return { email: email, success: true }
+    await this.emailService.sendResetPasswordEmail(
+      user.email,
+      user.name,
+      language,
+      resetPasswordToken,
+    )
+    return {
+      email: email,
+      success: true,
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<TAuthPayload> {
+    const decoded = this.tokenService.verify<{
+      userId: string
+      email: string
+      type: string
+    }>(token)
+    if (!decoded.valid) throw new CastError('invalidToken')
+    if (!decoded.payload?.type || decoded.payload.type !== 'FORGOT_PASSWORD')
+      throw new CastError('invalidToken')
+
+    const user = await this.userRepository.getUser({
+      userId: decoded.payload?.userId,
+      email: decoded.payload?.email,
+      provider: 'API',
+    })
+
+    if (!user) throw new CastError('invalidToken')
+    if (user.userId !== decoded.payload?.userId) throw new CastError('invalidToken')
+
+    const updatePasswordUser = await this.userRepository.updateUser(user.userId, {
+      name: user.name,
+      password: await bcrypt.hash(newPassword, 10),
+      status: 'ACTIVE',
+    })
+    if (!updatePasswordUser) throw new CastError('userNotFound')
+    return this.authenticate(updatePasswordUser)
   }
 }

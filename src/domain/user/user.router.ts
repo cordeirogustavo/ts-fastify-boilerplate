@@ -6,10 +6,12 @@ import type { FastifyTypedInstance } from '@/shared/types'
 import {
   ConfirmAccountSchema,
   CreateUserSchema,
+  ForgotPasswordSchema,
   LoginRequirePasscodeSchema,
   LoginSchema,
   LoginWithFacebookSchema,
   LoginWithGoogleSchema,
+  ResetPasswordSchema,
   UserDTO,
   ValidatePasscodeSchema,
 } from './user.schema'
@@ -58,7 +60,7 @@ export class UserRouter implements IRouter {
           summary: 'Create new user account',
           description: 'Register a new user account with email verification',
           security: [],
-          body: z.object(CreateUserSchema.shape),
+          body: CreateUserSchema,
           response: {
             201: UserDTO,
             400: ErrorSchema,
@@ -80,7 +82,7 @@ export class UserRouter implements IRouter {
           summary: 'Confirm user account',
           description: 'Confirm user account using verification token sent via email',
           security: [],
-          body: z.object(ConfirmAccountSchema.shape),
+          body: ConfirmAccountSchema,
           response: {
             200: AuthPayloadSchema,
             400: ErrorSchema,
@@ -102,7 +104,7 @@ export class UserRouter implements IRouter {
           summary: 'User login',
           description: 'Authenticate user with email and password',
           security: [],
-          body: z.object(LoginSchema.shape),
+          body: LoginSchema,
           response: {
             200: z.union([
               AuthPayloadSchema.describe('Authenticated user'),
@@ -128,7 +130,7 @@ export class UserRouter implements IRouter {
           summary: 'Login with Google',
           description: 'Authenticate user using Google OAuth',
           security: [],
-          body: z.object(LoginWithGoogleSchema.shape),
+          body: LoginWithGoogleSchema,
           response: {
             200: z.union([
               AuthPayloadSchema.describe('Authenticated user'),
@@ -154,7 +156,7 @@ export class UserRouter implements IRouter {
           summary: 'Login with Facebook',
           description: 'Authenticate user using Facebook OAuth',
           security: [],
-          body: z.object(LoginWithFacebookSchema.shape),
+          body: LoginWithFacebookSchema,
           response: {
             200: z.union([
               AuthPayloadSchema.describe('Authenticated user'),
@@ -180,7 +182,7 @@ export class UserRouter implements IRouter {
           summary: 'Validate two-factor authentication code',
           description: 'Validate TOTP passcode for two-factor authentication',
           security: [],
-          body: z.object(ValidatePasscodeSchema.shape),
+          body: ValidatePasscodeSchema,
           response: {
             200: AuthPayloadSchema,
             400: ErrorSchema,
@@ -190,6 +192,52 @@ export class UserRouter implements IRouter {
       async (req, reply) => {
         const { passcode, userId } = req.body
         const user = await this.userService.validatePasscode(userId, passcode)
+        reply.status(200).send(user)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/forgot-password`,
+      {
+        schema: {
+          tags: [PREFIX],
+          operationId: 'forgotPassword',
+          summary: 'Request password reset',
+          description: 'Send password reset email to user',
+          security: [],
+          body: z.object({ email: z.email() }),
+          response: {
+            200: ForgotPasswordSchema,
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { email } = req.body
+        const forgotPassword = await this.userService.forgotPassword(email, req.language)
+        reply.status(200).send(forgotPassword)
+      },
+    )
+
+    app.post(
+      `${PREFIX}/reset-password`,
+      {
+        schema: {
+          tags: [PREFIX],
+          operationId: 'resetPassword',
+          summary: 'Reset user password',
+          description: 'Reset user password using token from email',
+          security: [],
+          body: ResetPasswordSchema,
+          response: {
+            200: AuthPayloadSchema,
+            400: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { newPassword, token } = req.body
+        const user = await this.userService.resetPassword(token, newPassword)
         reply.status(200).send(user)
       },
     )

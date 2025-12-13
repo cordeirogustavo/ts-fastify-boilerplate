@@ -14,6 +14,7 @@ import {
 import { container } from 'tsyringe'
 import { type AppConfig, ConfigSymbols } from './config'
 import { AppRouter } from './shared/app/app.router'
+import { LanguageHeaderSchema } from './shared/errors'
 import { setupErrorHandler } from './shared/errors/handlers'
 import { authMiddleware, languageMiddleware } from './shared/middlewares'
 
@@ -62,9 +63,27 @@ async function bootstrap() {
             bearerFormat: 'JWT',
           },
         },
+        parameters: {
+          LanguageHeader: {
+            name: 'language',
+            in: 'header',
+            required: true,
+            description: 'Request language',
+            schema: {
+              type: 'string',
+              enum: Object.values(LanguageHeaderSchema.shape.language.def.innerType.def.entries),
+              default: LanguageHeaderSchema.def.shape.language.def.defaultValue,
+            },
+          },
+        },
       },
     },
     transform: jsonSchemaTransform,
+  })
+
+  app.addHook('onRoute', (route) => {
+    route.schema ??= {}
+    route.schema.headers ??= LanguageHeaderSchema
   })
 
   await app.register(ScalarApiReference, {

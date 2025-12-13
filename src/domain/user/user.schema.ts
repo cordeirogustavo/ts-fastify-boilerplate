@@ -58,6 +58,7 @@ export const ConfirmAccountSchema = z.object({
 
 export const ForgotPasswordSchema = z.object({
   email: z.email(),
+  success: z.boolean(),
 })
 
 export const LoginSchema = z.object({
