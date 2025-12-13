@@ -9,6 +9,6 @@ export const mapUserToUserDto = (user: TUser): TUserDTO => {
     mfaEnabled: user.mfaEnabled || 0,
     mfaMethod: user.mfaMethod,
     mfaKey: user.mfaKey,
-    provider: user.provider,
+    provider: user.provider || null,
   }
 }
