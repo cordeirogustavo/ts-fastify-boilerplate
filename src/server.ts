@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import '@/shared/app/app.container'
 
 import { fastifyCors } from '@fastify/cors'
+import fastifyMultipart from '@fastify/multipart'
 import { fastifySwagger } from '@fastify/swagger'
 import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
@@ -40,8 +41,10 @@ async function bootstrap() {
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.addHook('onRequest', languageMiddleware)
-
   app.decorate('authenticate', authMiddleware)
+  await app.register(fastifyMultipart, {
+    attachFieldsToBody: true,
+  })
 
   await app.register(fastifyCors, {
     origin: true,
@@ -81,9 +84,17 @@ async function bootstrap() {
     transform: jsonSchemaTransform,
   })
 
+  app.addHook('onRequest', async (req, reply) => {
+    if (!req.routeOptions.config.hasAuth) return
+    await app.authenticate(req, reply)
+  })
+
   app.addHook('onRoute', (route) => {
     route.schema ??= {}
     route.schema.headers ??= LanguageHeaderSchema
+    route.config ??= {}
+    route.config.hasAuth ??= false
+    if (route.config.hasAuth) route.schema.security = [{ bearerAuth: [] }]
   })
 
   await app.register(ScalarApiReference, {

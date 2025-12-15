@@ -4,6 +4,7 @@ import type {
   ForgotPasswordSchema,
   LoginRequirePasscodeSchema,
   MfaKey,
+  UpdateUserSchema,
   UserDTO,
   UserSchema,
 } from './user.schema'
@@ -18,5 +19,6 @@ export type TUserDTO = z.infer<typeof UserDTO>
 export type TUser = z.infer<typeof UserSchema>
 export type TMfaKey = z.infer<typeof MfaKey>
 export type TCreateUserInput = z.infer<typeof CreateUserSchema>
+export type TUpdateUserInput = z.infer<typeof UpdateUserSchema>
 export type TLoginRequirePasscode = z.infer<typeof LoginRequirePasscodeSchema>
 export type TForgotPassword = z.infer<typeof ForgotPasswordSchema>

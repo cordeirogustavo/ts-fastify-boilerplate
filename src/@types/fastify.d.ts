@@ -11,4 +11,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     authenticate: AuthHook
   }
+  interface FastifyContextConfig {
+    hasAuth?: boolean
+  }
 }

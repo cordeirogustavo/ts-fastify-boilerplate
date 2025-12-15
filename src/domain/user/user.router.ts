@@ -12,6 +12,7 @@ import {
   LoginWithFacebookSchema,
   LoginWithGoogleSchema,
   ResetPasswordSchema,
+  UpdateUserSchema,
   UserDTO,
   ValidatePasscodeSchema,
 } from './user.schema'
@@ -31,13 +32,12 @@ export class UserRouter implements IRouter {
     app.get(
       `${PREFIX}/:userId`,
       {
-        onRequest: app.authenticate,
+        config: { hasAuth: true },
         schema: {
           tags: [PREFIX],
           operationId: 'getUserById',
           summary: 'Get user by id',
           description: 'Get user by id',
-          security: [{ bearerAuth: [] }],
           params: z.object({ userId: z.uuid() }),
           response: {
             200: UserDTO,
@@ -186,6 +186,8 @@ export class UserRouter implements IRouter {
           response: {
             200: AuthPayloadSchema,
             400: ErrorSchema,
+            404: ErrorSchema,
+            410: ErrorSchema,
           },
         },
       },
@@ -232,12 +234,40 @@ export class UserRouter implements IRouter {
           response: {
             200: AuthPayloadSchema,
             400: ErrorSchema,
+            404: ErrorSchema,
           },
         },
       },
       async (req, reply) => {
         const { newPassword, token } = req.body
         const user = await this.userService.resetPassword(token, newPassword)
+        reply.status(200).send(user)
+      },
+    )
+
+    app.put(
+      `${PREFIX}/:userId`,
+      {
+        schema: {
+          config: { hasAuth: true },
+          tags: [PREFIX],
+          operationId: 'updateUser',
+          summary: 'Update user information',
+          description: 'Update user basic information and settings',
+          security: [],
+          params: z.object({ userId: z.string() }),
+          body: UpdateUserSchema,
+          consumes: ['multipart/form-data'],
+          response: {
+            200: UserDTO,
+            400: ErrorSchema,
+            404: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { userId } = req.params
+        const user = await this.userService.updateUser(userId, req.body)
         reply.status(200).send(user)
       },
     )

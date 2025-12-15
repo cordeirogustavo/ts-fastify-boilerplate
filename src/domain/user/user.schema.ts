@@ -44,13 +44,23 @@ export const UserDTO = z.object({
 
 export const CreateUserSchema = z.object(UserSchema.omit({ userId: true }).shape)
 
-export const UpdateUserSchema = z.object(UserSchema.shape).omit({
-  userId: true,
-  email: true,
-  password: true,
-  provider: true,
-  providerIdentifier: true,
-})
+export const UpdateUserSchema = z
+  .object({
+    ...UserSchema.shape,
+    picturePath: z.string().optional(),
+    file: ImageFileSchema.optional(),
+  })
+  .omit({
+    userId: true,
+    email: true,
+    password: true,
+    provider: true,
+    providerIdentifier: true,
+  })
+  .refine((data) => data.mfaEnabled !== 1 || !!data.mfaMethod, {
+    message: 'MFA method is required',
+    path: ['mfaMethod'],
+  })
 
 export const ConfirmAccountSchema = z.object({
   token: z.jwt(),
@@ -64,7 +74,6 @@ export const ForgotPasswordSchema = z.object({
 export const LoginSchema = z.object({
   email: z.email(),
   password: z.string(),
-  recaptchaToken: z.string().optional(),
 })
 
 export const LoginRequirePasscodeSchema = z.object({

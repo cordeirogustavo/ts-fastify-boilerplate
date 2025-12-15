@@ -15,7 +15,7 @@ import {
   type TokenService,
 } from '@/shared/services'
 import type { TAuthPayload, TLanguages } from '@/shared/types'
-import { capitalizeWords, mountMediaUrl } from '@/shared/utils'
+import { capitalizeWords, getKey, mountMediaUrl } from '@/shared/utils'
 import { UserLoginAttemptsSymbols } from '../user-login-attempts'
 import type { IUserLoginAttemptsService } from '../user-login-attempts/user-login-attempts.interface'
 import { mapUserToUserDto } from './user.mapper'
@@ -25,6 +25,7 @@ import type {
   TCreateUserInput,
   TForgotPassword,
   TLoginRequirePasscode,
+  TUpdateUserInput,
   TUser,
   TUserDTO,
 } from './user.types'
@@ -51,6 +52,7 @@ export interface IUserService {
   validatePasscode(userId: string, passcode: string): Promise<TAuthPayload>
   forgotPassword(email: string, language: TLanguages): Promise<TForgotPassword>
   resetPassword(token: string, newPassword: string): Promise<TAuthPayload>
+  updateUser(userId: string, data: TUpdateUserInput): Promise<TUserDTO>
 }
 
 @singleton()
@@ -367,5 +369,46 @@ export class UserService implements IUserService {
     })
     if (!updatePasswordUser) throw new CastError('userNotFound')
     return this.authenticate(updatePasswordUser)
+  }
+
+  async updateUser(userId: string, data: TUpdateUserInput): Promise<TUserDTO> {
+    const user = await this.userRepository.getUser({ userId })
+    if (!user) throw new NotFoundError('userNotFound')
+
+    let profilePicture = user.userPicture
+    const file = data.file
+    if (file) {
+      const fileKey = await getKey(file.originalname)
+      const s3Key = `${this.appConfig.appName}/assets/user-profiles/${fileKey}-${file.originalname}`
+      const oldPicture = user.userPicture
+
+      const uploadResult = await this.s3Service.uploadFile({
+        bucket: this.appConfig.aws.bucketName,
+        key: s3Key,
+        contents: file.buffer,
+        metadata: {
+          contentType: file.mimetype,
+        },
+      })
+      if (!uploadResult.success) throw new CastError('failedToUploadProfilePicture')
+      if (oldPicture) {
+        await this.s3Service.deleteFile(this.appConfig.aws.bucketName, oldPicture)
+      }
+      profilePicture = s3Key
+    }
+    if (user.userPicture && !data.picturePath && !file) {
+      await this.s3Service.deleteFile(this.appConfig.aws.bucketName, user.userPicture)
+      profilePicture = ''
+    }
+    delete data.picturePath
+    const updatedUser = await this.userRepository.updateUser(userId, {
+      ...data,
+      userPicture: profilePicture,
+    })
+    if (!updatedUser) throw new CastError('failedToUpdateUser')
+    return mapUserToUserDto({
+      ...updatedUser,
+      userPicture: mountMediaUrl(this.appConfig.cdnUrl, updatedUser.userPicture || ''),
+    })
   }
 }
