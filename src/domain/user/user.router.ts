@@ -19,7 +19,7 @@ import {
 import type { IUserService } from './user.service'
 import { UserSymbols } from './user.symbols'
 
-const PREFIX = '/user'
+const PREFIX = 'user'
 
 @singleton()
 export class UserRouter implements IRouter {
@@ -30,7 +30,7 @@ export class UserRouter implements IRouter {
 
   public register(app: FastifyTypedInstance): void {
     app.get(
-      `${PREFIX}/:userId`,
+      `/${PREFIX}/:userId`,
       {
         config: { hasAuth: true },
         schema: {
@@ -52,7 +52,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}`,
+      `/${PREFIX}`,
       {
         config: { validateRecaptcha: true },
         schema: {
@@ -75,7 +75,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/confirm-account`,
+      `/${PREFIX}/confirm-account`,
       {
         schema: {
           tags: [PREFIX],
@@ -97,7 +97,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/login`,
+      `/${PREFIX}/login`,
       {
         config: { validateRecaptcha: true },
         schema: {
@@ -124,7 +124,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/login-with-google`,
+      `/${PREFIX}/login-with-google`,
       {
         schema: {
           tags: [PREFIX],
@@ -150,7 +150,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/login-with-facebook`,
+      `/${PREFIX}/login-with-facebook`,
       {
         schema: {
           tags: [PREFIX],
@@ -176,7 +176,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/validate-passcode`,
+      `/${PREFIX}/validate-passcode`,
       {
         schema: {
           tags: [PREFIX],
@@ -201,7 +201,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/forgot-password`,
+      `/${PREFIX}/forgot-password`,
       {
         schema: {
           tags: [PREFIX],
@@ -224,7 +224,7 @@ export class UserRouter implements IRouter {
     )
 
     app.post(
-      `${PREFIX}/reset-password`,
+      `/${PREFIX}/reset-password`,
       {
         schema: {
           tags: [PREFIX],
@@ -248,18 +248,21 @@ export class UserRouter implements IRouter {
     )
 
     app.put(
-      `${PREFIX}/:userId`,
+      `/${PREFIX}/:userId`,
       {
+        preValidation: async (req) => {
+          const rawBody = Object.fromEntries((await req.formData()).entries())
+          req.body = UpdateUserSchema.parse(rawBody)
+        },
         schema: {
           config: { hasAuth: true },
           tags: [PREFIX],
           operationId: 'updateUser',
           summary: 'Update user information',
           description: 'Update user basic information and settings',
-          security: [],
+          consumes: ['multipart/form-data'],
           params: z.object({ userId: z.string() }),
           body: UpdateUserSchema,
-          consumes: ['multipart/form-data'],
           response: {
             200: UserDTO,
             400: ErrorSchema,

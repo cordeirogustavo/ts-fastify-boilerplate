@@ -116,7 +116,10 @@ export class UserService implements IUserService {
   async getUserById(userId: string): Promise<TUserDTO> {
     const user = await this.userRepository.getUser({ userId })
     if (!user) throw new NotFoundError('userNotFound')
-    return mapUserToUserDto(user)
+    return mapUserToUserDto({
+      ...user,
+      userPicture: mountMediaUrl(this.appConfig.cdnUrl, user.userPicture || ''),
+    })
   }
 
   async createUser(userData: TCreateUserInput, language: TLanguages): Promise<TUserDTO> {
@@ -378,16 +381,16 @@ export class UserService implements IUserService {
     let profilePicture = user.userPicture
     const file = data.file
     if (file) {
-      const fileKey = await getKey(file.originalname)
-      const s3Key = `${this.appConfig.appName}/assets/user-profiles/${fileKey}-${file.originalname}`
+      const fileKey = await getKey(file.name)
+      const s3Key = `${this.appConfig.appName}/assets/user-profiles/${fileKey}-${file.name}`
       const oldPicture = user.userPicture
 
       const uploadResult = await this.s3Service.uploadFile({
         bucket: this.appConfig.aws.bucketName,
         key: s3Key,
-        contents: file.buffer,
+        contents: await file.bytes(),
         metadata: {
-          contentType: file.mimetype,
+          contentType: file.type,
         },
       })
       if (!uploadResult.success) throw new CastError('failedToUploadProfilePicture')
