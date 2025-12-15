@@ -14,9 +14,9 @@ import {
 import { container } from 'tsyringe'
 import { type AppConfig, ConfigSymbols } from './config'
 import { AppRouter } from './shared/app/app.router'
-import { LanguageHeaderSchema } from './shared/errors'
 import { setupErrorHandler } from './shared/errors/handlers'
 import { authMiddleware, languageMiddleware } from './shared/middlewares'
+import { LanguageHeaderSchema } from './shared/schemas'
 
 const config = container.resolve<AppConfig>(ConfigSymbols.AppConfig)
 const port = config.appPort

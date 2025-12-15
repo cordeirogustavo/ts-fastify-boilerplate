@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe'
 import z from 'zod'
-import { AuthPayloadSchema, ErrorSchema } from '@/shared/errors'
 import type { IRouter } from '@/shared/interfaces'
+import { AuthPayloadSchema, ErrorSchema } from '@/shared/schemas'
 import type { FastifyTypedInstance } from '@/shared/types'
 import {
   ConfirmAccountSchema,
