@@ -54,6 +54,7 @@ export class UserRouter implements IRouter {
     app.post(
       `${PREFIX}`,
       {
+        config: { validateRecaptcha: true },
         schema: {
           tags: [PREFIX],
           operationId: 'createUser',
@@ -98,6 +99,7 @@ export class UserRouter implements IRouter {
     app.post(
       `${PREFIX}/login`,
       {
+        config: { validateRecaptcha: true },
         schema: {
           tags: [PREFIX],
           operationId: 'loginUser',

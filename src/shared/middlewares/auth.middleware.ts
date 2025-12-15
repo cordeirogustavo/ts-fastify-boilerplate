@@ -26,7 +26,6 @@ export async function authMiddleware(request: FastifyRequest, _reply: FastifyRep
     if (!decoded.valid || !decoded.payload) {
       throw new UnauthorizedError('invalidToken')
     }
-
     request.authUser = {
       userId: decoded.payload.userId,
       name: decoded.payload.name,

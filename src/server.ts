@@ -16,8 +16,8 @@ import { container } from 'tsyringe'
 import { type AppConfig, ConfigSymbols } from './config'
 import { AppRouter } from './shared/app/app.router'
 import { setupErrorHandler } from './shared/errors/handlers'
-import { authMiddleware, languageMiddleware } from './shared/middlewares'
-import { LanguageHeaderSchema } from './shared/schemas'
+import { authMiddleware, languageMiddleware, recaptchaMiddleware } from './shared/middlewares'
+import { LanguageHeaderSchema, RecaptchaHeaderSchema } from './shared/schemas'
 
 const config = container.resolve<AppConfig>(ConfigSymbols.AppConfig)
 const port = config.appPort
@@ -42,6 +42,7 @@ async function bootstrap() {
   app.setSerializerCompiler(serializerCompiler)
   app.addHook('onRequest', languageMiddleware)
   app.decorate('authenticate', authMiddleware)
+  app.decorate('validateRecaptcha', recaptchaMiddleware)
   await app.register(fastifyMultipart, {
     attachFieldsToBody: true,
   })
@@ -89,12 +90,25 @@ async function bootstrap() {
     await app.authenticate(req, reply)
   })
 
+  app.addHook('onRequest', async (req, reply) => {
+    if (!req.routeOptions.config.validateRecaptcha) return
+    // Comment next line if you want to use recaptcha in local
+    console.log(config.env)
+    if (config.env === 'local') return
+    await app.validateRecaptcha(req, reply)
+  })
+
   app.addHook('onRoute', (route) => {
-    route.schema ??= {}
-    route.schema.headers ??= LanguageHeaderSchema
     route.config ??= {}
     route.config.hasAuth ??= false
+    route.config.validateRecaptcha ??= false
+    route.schema ??= {}
+    let headersSchema = LanguageHeaderSchema
     if (route.config.hasAuth) route.schema.security = [{ bearerAuth: [] }]
+    if (route.config.validateRecaptcha)
+      headersSchema = headersSchema.extend(RecaptchaHeaderSchema.shape)
+
+    route.schema.headers = headersSchema
   })
 
   await app.register(ScalarApiReference, {
