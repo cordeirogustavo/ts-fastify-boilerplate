@@ -4,6 +4,7 @@ import type { IRouter } from '@/shared/interfaces'
 import { AuthPayloadSchema, ErrorSchema } from '@/shared/schemas'
 import type { FastifyTypedInstance } from '@/shared/types'
 import {
+  ChangePasswordSchema,
   ConfirmAccountSchema,
   CreateUserSchema,
   ForgotPasswordSchema,
@@ -274,6 +275,31 @@ export class UserRouter implements IRouter {
         const { userId } = req.params
         const user = await this.userService.updateUser(userId, req.body)
         reply.status(200).send(user)
+      },
+    )
+
+    app.put(
+      `/${PREFIX}/:userId/change-password`,
+      {
+        schema: {
+          config: { hasAuth: true },
+          tags: [PREFIX],
+          operationId: 'changePassword',
+          summary: 'Change user password',
+          description: 'Change user password with current password verification',
+          params: z.object({ userId: z.string() }),
+          body: ChangePasswordSchema,
+          response: {
+            200: z.object({ success: z.boolean().describe('Password changed') }),
+            400: ErrorSchema,
+            404: ErrorSchema,
+          },
+        },
+      },
+      async (req, reply) => {
+        const { userId } = req.params
+        const changed = await this.userService.changePassword(userId, req.body)
+        reply.status(200).send({ success: changed })
       },
     )
   }

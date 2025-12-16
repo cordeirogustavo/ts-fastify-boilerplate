@@ -22,6 +22,7 @@ import { mapUserToUserDto } from './user.mapper'
 import type { IUserRepository } from './user.repository'
 import { UserSymbols } from './user.symbols'
 import type {
+  TChangePasswordInput,
   TCreateUserInput,
   TForgotPassword,
   TLoginRequirePasscode,
@@ -31,6 +32,7 @@ import type {
 } from './user.types'
 
 export interface IUserService {
+  authenticate(user: TUser): Promise<TAuthPayload>
   sendMailPasscode(user: TUser, language: TLanguages): Promise<void>
   getUserById(userId: string): Promise<TUserDTO>
   createUser(userData: TCreateUserInput, language: TLanguages): Promise<TUserDTO>
@@ -53,6 +55,7 @@ export interface IUserService {
   forgotPassword(email: string, language: TLanguages): Promise<TForgotPassword>
   resetPassword(token: string, newPassword: string): Promise<TAuthPayload>
   updateUser(userId: string, data: TUpdateUserInput): Promise<TUserDTO>
+  changePassword(userId: string, data: TChangePasswordInput): Promise<boolean>
 }
 
 @singleton()
@@ -78,7 +81,7 @@ export class UserService implements IUserService {
     private readonly userLoginAttemptsService: IUserLoginAttemptsService,
   ) {}
 
-  private async authenticate(user: TUser): Promise<TAuthPayload> {
+  async authenticate(user: TUser): Promise<TAuthPayload> {
     const userPicture = mountMediaUrl(this.appConfig.cdnUrl, user.userPicture || '')
     const userPermissions = {
       global: [],
@@ -413,5 +416,20 @@ export class UserService implements IUserService {
       ...updatedUser,
       userPicture: mountMediaUrl(this.appConfig.cdnUrl, updatedUser.userPicture || ''),
     })
+  }
+
+  async changePassword(userId: string, data: TChangePasswordInput): Promise<boolean> {
+    const user = await this.userRepository.getUser({ userId })
+    if (!user) throw new NotFoundError('userNotFound')
+    if (!user.provider || user.provider !== 'API')
+      throw new CastError('changeAllowedOnlyForApiProvider')
+
+    const passwordMatch = await bcrypt.compare(data.oldPassword, user.password || '')
+    if (!passwordMatch) throw new CastError('invalidCredentials')
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10)
+    await this.userRepository.updateUser(user.userId, {
+      password: hashedPassword,
+    })
+    return true
   }
 }
