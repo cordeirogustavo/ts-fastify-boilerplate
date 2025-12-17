@@ -30,7 +30,7 @@ A clean, well-structured TypeScript API boilerplate built on Fastify. This repos
 1. Clone and install dependencies:
 
 ```bash
-git clone https://github.com/<user>/ts-fastify-boilerplate.git
+git clone https://github.com/cordeirogustavo/ts-fastify-boilerplate.git
 cd ts-fastify-boilerplate
 pnpm install
 ```
@@ -113,7 +113,7 @@ This arrangement keeps business logic (domain) independent from infra and framew
 
 ---
 
-## Project tree (simplified and annotated)
+## Project tree
 
 ```
 .                                   # repo root
