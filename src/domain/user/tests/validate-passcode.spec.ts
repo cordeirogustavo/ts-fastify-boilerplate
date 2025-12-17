@@ -9,8 +9,14 @@ describe('User Validate Passcode', () => {
   })
 
   it('should validate passcode successfully with APP method', async () => {
-    const { userService, userRepository, user, totpService, userLoginAttemptsService } =
-      generateUserMock()
+    const {
+      userService,
+      userRepository,
+      user,
+      totpService,
+      userLoginAttemptsService,
+      mockPermission,
+    } = generateUserMock()
 
     const userWithMfa = {
       ...user,
@@ -32,6 +38,7 @@ describe('User Validate Passcode', () => {
       name: userWithMfa.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
 
     const mfaKey = userWithMfa.mfaKey?.secret || ''
@@ -48,11 +55,13 @@ describe('User Validate Passcode', () => {
       name: userWithMfa.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
   })
 
   it('should validate passcode successfully with EMAIL method', async () => {
-    const { userService, userRepository, user, userLoginAttemptsService } = generateUserMock()
+    const { userService, userRepository, user, userLoginAttemptsService, mockPermission } =
+      generateUserMock()
 
     const userWithEmailMfa = {
       ...user,
@@ -74,6 +83,7 @@ describe('User Validate Passcode', () => {
       name: userWithEmailMfa.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
 
     const result = await userService.validatePasscode(userWithEmailMfa.userId, '123456')
@@ -88,6 +98,7 @@ describe('User Validate Passcode', () => {
       name: userWithEmailMfa.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
   })
 

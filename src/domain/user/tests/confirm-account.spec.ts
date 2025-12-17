@@ -9,7 +9,8 @@ describe('User Confirm Account', () => {
   })
 
   it('should confirm account successfully', async () => {
-    const { userRepository, userService, tokenService, user, appConfig } = generateUserMock()
+    const { userRepository, userService, tokenService, user, appConfig, mockPermission } =
+      generateUserMock()
 
     const token = 'valid-token'
     const decodedPayload = {
@@ -34,6 +35,7 @@ describe('User Confirm Account', () => {
       name: user.name,
       userPicture: mountMediaUrl(appConfig.cdnUrl, user.userPicture || ''),
       token: 'new-token',
+      scopes: mockPermission,
     })
     vi.spyOn(tokenService, 'sign').mockReturnValueOnce('new-token')
 
@@ -45,6 +47,7 @@ describe('User Confirm Account', () => {
       name: user.name,
       userPicture: mountMediaUrl(appConfig.cdnUrl, user.userPicture || ''),
       token: 'new-token',
+      scopes: mockPermission,
     })
 
     expect(tokenService.verify).toHaveBeenCalledWith(token)

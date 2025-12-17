@@ -11,7 +11,8 @@ describe('User Login', () => {
   })
 
   it('should login successfully with valid credentials', async () => {
-    const { userService, userRepository, user, userLoginAttemptsService } = generateUserMock()
+    const { userService, userRepository, user, userLoginAttemptsService, mockPermission } =
+      generateUserMock()
 
     vi.spyOn(userRepository, 'getUser').mockResolvedValueOnce(user)
     vi.spyOn(userLoginAttemptsService, 'getUserAttempts').mockResolvedValueOnce({
@@ -26,6 +27,7 @@ describe('User Login', () => {
       name: user.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
 
     const result = await userService.login(user.email, 'test-password', 'pt-BR' as TLanguages)
@@ -41,6 +43,7 @@ describe('User Login', () => {
       name: user.name,
       userPicture: '',
       token: 'token',
+      scopes: mockPermission,
     })
   })
 

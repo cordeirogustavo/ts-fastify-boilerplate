@@ -9,7 +9,7 @@ describe('User Reset Password', () => {
   })
 
   it('should reset password successfully', async () => {
-    const { userService, userRepository, tokenService, user } = generateUserMock()
+    const { userService, userRepository, tokenService, user, mockPermission } = generateUserMock()
 
     const mockPayload = {
       userId: user.userId,
@@ -39,6 +39,7 @@ describe('User Reset Password', () => {
       name: user.name,
       userPicture: '',
       token: 'new-token',
+      scopes: mockPermission,
     })
 
     const result = await userService.resetPassword('valid-token', 'new-password')
@@ -60,6 +61,7 @@ describe('User Reset Password', () => {
       name: user.name,
       userPicture: '',
       token: 'new-token',
+      scopes: mockPermission,
     })
   })
 
