@@ -4,12 +4,14 @@ import { inject, singleton } from 'tsyringe'
 
 import { type AppConfig, ConfigSymbols } from '@/config'
 import * as schema from '@/database/schema'
+import { DatabaseExpressions } from './database-expressions'
 
 export type DrizzleDB = NodePgDatabase<typeof schema>
 
 @singleton()
 export class DatabaseProvider {
   public readonly db: DrizzleDB
+  public readonly expr: DatabaseExpressions
   private readonly pool: Pool
 
   constructor(@inject(ConfigSymbols.AppConfig) private readonly config: AppConfig) {
@@ -21,6 +23,7 @@ export class DatabaseProvider {
       schema,
       logger: false,
     })
+    this.expr = new DatabaseExpressions()
     console.log('Drizzle initialized')
   }
 

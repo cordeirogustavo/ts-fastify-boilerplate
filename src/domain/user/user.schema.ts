@@ -23,7 +23,7 @@ export const UserSchema = z.object({
   email: z.email(),
   password: z.string().min(6).nullable(),
   status: z.enum(['ACTIVE', 'PENDING', 'DEACTIVATED']).nullable().optional(),
-  provider: z.enum(['API', 'GOOGLE', 'FACEBOOK']).nullable().optional(),
+  provider: z.enum(['API', 'GOOGLE', 'FACEBOOK']).optional(),
   userPicture: z.string().nullable().optional(),
   providerIdentifier: z.string().nullable().optional(),
   mfaEnabled: z.coerce.number().min(0).max(1).nullable().optional(),
