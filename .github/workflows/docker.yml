@@ -34,9 +34,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            REACT_APP_API_URL=${{secrets.API_URL}}
-            REACT_APP_IMPORT_API_URL=${{secrets.IMPORT_API_URL}}
 
       - name: Deploy Image to CapRrover
         uses: caprover/deploy-from-github@v1.1.2
