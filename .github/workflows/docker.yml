@@ -1,0 +1,47 @@
+name: Build/Push PROD image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Development
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: "${{ secrets.DOCKER_USER }}/${{ github.event.repository.name }}"
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_API_URL=${{secrets.API_URL}}
+            REACT_APP_IMPORT_API_URL=${{secrets.IMPORT_API_URL}}
+
+      - name: Deploy Image to CapRrover
+        uses: caprover/deploy-from-github@v1.1.2
+        with:
+          server: "${{ secrets.CAPROVER_SERVER }}"
+          app: "${{ secrets.CAPROVER_APP_NAME }}"
+          token: "${{ secrets.CAPROVER_APP_TOKEN }}"
+          image: "${{ secrets.DOCKER_USER }}/${{ github.event.repository.name }}:latest"
