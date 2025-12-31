@@ -94,7 +94,8 @@ async function bootstrap() {
     if (!req.routeOptions.config.validateRecaptcha) return
     // Comment next line if you want to use recaptcha in local
     // if (config.env === 'local') return
-    await app.validateRecaptcha(req, reply)
+    // Remove comment next line if you want to use recaptcha
+    // await app.validateRecaptcha(req, reply)
   })
 
   app.addHook('onRoute', (route) => {
