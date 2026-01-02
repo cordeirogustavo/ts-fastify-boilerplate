@@ -20,7 +20,8 @@ $$;
 
 DO $$
 BEGIN
-    IF NOT EXISTS CREATE TYPE public."UserProvider" AS ENUM
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserProvider') THEN
+        CREATE TYPE public."UserProvider" AS ENUM
         ('API', 'GOOGLE', 'FACEBOOK');
     END IF;
 END
