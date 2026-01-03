@@ -1,5 +1,6 @@
 export type LogLevelConfig = 'trace' | 'debug' | 'info' | 'warn'
 export type CacheProviderConfig = 'Redis' | 'NodeCache'
+export type EnvConfig = 'local' | 'development' | 'production'
 
 export interface AppConfig {
   env: string

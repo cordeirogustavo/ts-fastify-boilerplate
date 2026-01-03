@@ -1,5 +1,5 @@
 import type { IFactory } from '@/shared/interfaces'
-import type { AppConfig, CacheProviderConfig } from './config.type'
+import type { AppConfig, CacheProviderConfig, EnvConfig } from './config.type'
 
 export class ConfigFactory implements IFactory<AppConfig> {
   private loadedFromEnv = false
@@ -9,12 +9,6 @@ export class ConfigFactory implements IFactory<AppConfig> {
       this.loadedFromEnv = true
     }
   }
-  private appUrl = {
-    local: 'http://localhost:5173',
-    development: 'https://aimanagerdev.beeno.com.br',
-    production: 'https://aimanager.beeno.com.br',
-  }
-  private env = (process.env.NODE_ENV as keyof typeof this.appUrl) || 'local'
 
   produce(): AppConfig {
     this.loadConfig()
@@ -23,7 +17,7 @@ export class ConfigFactory implements IFactory<AppConfig> {
       env: process.env.NODE_ENV || 'local',
       appName: process.env.APP_NAME || 'TS-API',
       appSlug: process.env.APP_SLUG || 'ts-api',
-      appUrl: this.appUrl[this.env] || 'http://localhost:5173',
+      appUrl: process.env.APP_URL || 'http://localhost:5173',
       cdnUrl: process.env.CDN_URL || '',
       appPort: Number(process.env.APP_PORT) || 3000,
       appSecret: process.env.APP_SECRET || 'your-secret-key',
